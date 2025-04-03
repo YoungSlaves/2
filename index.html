@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saponify</title>
+    <link rel="icon" href="icons/moon.ico" type="image/x-icon">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+        
+        #background-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -1;
+            object-fit: cover; /* Ensures video covers the entire screen */
+        }
+        
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        
+        #splash-text {
+            font-size: 24px;
+            font-weight: 500;
+            animation: textFlash 2s infinite ease-in-out;
+        }
+        
+        @keyframes textFlash {
+            0% { color: white; }
+            50% { color: #888888; }
+            100% { color: white; }
+        }
+        
+        #profile-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 90%; /* Use percentage instead of fixed width */
+            max-width: 500px; /* Maximum width for larger screens */
+            background-color: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid white;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+            overflow-y: auto; /* Allow scrolling if needed */
+            max-height: 90vh; /* Maximum height to ensure it fits on screen */
+        }
+        
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .profile-picture {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+        
+        .username {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 5px 0;
+            text-align: center;
+        }
+        
+        .website {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Reduced gap for smaller screens */
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+        }
+        
+        .social-icon {
+            background-color: #333;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .social-icon:hover {
+            background-color: #555;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #555;
+            margin: 15px 0;
+        }
+        
+        .music-player {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-direction: row; /* Default for larger screens */
+        }
+        
+        .song-cover {
+            width: 80px; /* Smaller for better fit */
+            height: 80px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        
+        .song-info {
+            flex-grow: 1;
+            min-width: 0; /* Allow for proper shrinking */
+        }
+        
+        .song-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .song-artist {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #555;
+            height: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: white;
+            border-radius: 5px;
+            width: 20%;
+        }
+        
+        .progress-slider {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 5px;
+            color: #ccc;
+        }
+        
+        .crypto-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .crypto-button {
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .crypto-button:hover {
+            background-color: #555;
+        }
+        
+        .about-me {
+            margin-top: 20px;
+        }
+        
+        .about-me-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .about-me-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ccc;
+        }
+        
+        .view-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        /* Media Queries for Responsive Design */
+        @media (max-width: 480px) {
+            #splash-text {
+                font-size: 20px;
+            }
+            
+            .music-player {
+                flex-direction: column; /* Stack elements on small screens */
+                align-items: center;
+            }
+            
+            .song-cover {
+                width: 100px; /* Slightly larger when stacked */
+                height: 100px;
+                margin-bottom: 10px;
+            }
+            
+            .song-info {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .social-links {
+                gap: 10px;
+            }
+            
+            .social-icon {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .username {
+                font-size: 22px;
+            }
+        }
+        
+        /* Prevent body scrolling but allow profile container to scroll */
+        @media (max-height: 600px) {
+            #profile-container {
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="splash-screen">
+        <div id="splash-text">click anywhere</div>
+    </div>
+    
+    <video id="background-video" loop muted autoplay playsinline>
+        <source src="media/car.mp4" type="video/mp4">
+    </video>
+    
+    <audio id="background-audio" loop>
+        <source src="media/asap.mp3" type="audio/mpeg">
+    </audio>
+    
+    <div id="profile-container">
+        <div class="view-count">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span id="view-counter">0</span>
+        </div>
+        
+        <div class="profile-header">
+            <img src="media/2.png" alt="Profile Picture" class="profile-picture" id="profile-pic">
+            <h1 class="username">saponify</h1>
+            <div class="website" id="animated-text">saponify.cc</div>
+        </div>
+        
+        <div class="social-links">
+            <div class="social-icon" title="Spotify">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <div class="social-icon" title="GitHub">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-github"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+            </div>
+            <div class="social-icon" title="Instagram">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </div>
+            <div class="social-icon" title="YouTube">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-youtube"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+            </div>
+            <div class="social-icon" title="Discord">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="music-player">
+            <img src="media/cover1.png" alt="Song Cover" class="song-cover" id="song-cover">
+            <div class="song-info">
+                <div class="song-title">Smoked Away My Brain</div>
+                <div class="song-artist">by Asap magic</div>
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div class="progress-slider" id="progress-slider"></div>
+                </div>
+                <div class="time-display">
+                    <span id="current-time">0:00</span>
+                    <span id="total-time">3:11</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="crypto-buttons">
+            <button class="crypto-button" id="btc-button">BTC</button>
+            <button class="crypto-button" id="ltc-button">LTC</button>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="about-me">
+            <div class="about-me-title">About Me</div>
+            <div class="about-me-content">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Handle splash screen
+        document.getElementById('splash-screen').addEventListener('click', function() {
+            this.style.display = 'none';
+            
+            // Animate profile container to appear
+            setTimeout(() => {
+                document.getElementById('profile-container').style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 100);
+            
+            // Start playing music
+            const audio = document.getElementById('background-audio');
+            audio.play().catch(e => {
+                console.log('Auto-play prevented. User needs to interact first:', e);
+                // Create a visual cue for user to tap to play music
+            });
+            
+            // Start the website name animation
+            startNameAnimation();
+            
+            // Track view using Netlify function
+            trackPageView();
+        });
+        
+        // Fix for iOS video autoplay
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('background-video');
+            video.setAttribute('playsinline', '');
+            video.setAttribute('muted', '');
+            video.setAttribute('loop', '');
+            video.play().catch(e => console.log('Video autoplay prevented initially:', e));
+        });
+        
+        // Handle mobile-specific events
+        function setupMobileEvents() {
+            // Enable audio on first touch for mobile devices (many mobile browsers block autoplay)
+            document.addEventListener('touchstart', function() {
+                const audio = document.getElementById('background-audio');
+                const video = document.getElementById('background-video');
+                
+                // Attempt to play both audio and video
+                audio.play().catch(e => console.log('Audio play error:', e));
+                video.play().catch(e => console.log('Video play error:', e));
+            }, { once: true });
+        }
+        
+        // Check if user is on mobile
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            setupMobileEvents();
+        }
+        
+        // Animated website name
+        function startNameAnimation() {
+            const fullText = "saponify.cc";
+            const animatedTextElement = document.getElementById('animated-text');
+            let direction = 'forward';
+            let currentIndex = 1; // Start at 1 to keep the first letter visible
+            
+            function updateText() {
+                if (direction === 'forward') {
+                    currentIndex++;
+                    if (currentIndex > fullText.length) {
+                        direction = 'backward';
+                        currentIndex = fullText.length - 1;
+                    }
+                } else {
+                    currentIndex--;
+                    if (currentIndex < 1) { // Don't go below 1 to keep first letter
+                        direction = 'forward';
+                        currentIndex = 2;
+                    }
+                }
+                
+                // Update the displayed text, always keeping the first letter
+                animatedTextElement.textContent = fullText.charAt(0) + fullText.substring(1, currentIndex);
+                
+                // Schedule the next update
+                setTimeout(updateText, 200);
+            }
+            
+            // Start the animation
+            updateText();
+        }
+        
+        // Progress bar functionality
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressSlider = document.getElementById('progress-slider');
+        const currentTimeDisplay = document.getElementById('current-time');
+        const totalTimeDisplay = document.getElementById('total-time');
+        const audio = document.getElementById('background-audio');
+        
+        // Handle click on progress bar
+        progressContainer.addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const clickPosition = e.clientX - rect.left;
+            const width = this.clientWidth;
+            const clickPercentage = (clickPosition / width);
+
+            updateProgressPosition(clickPercentage);
+        });
+        
+        // Add touch support for mobile
+        progressContainer.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // Prevent scrolling
+            const rect = this.getBoundingClientRect();
+            const touchPosition = e.touches[0].clientX - rect.left;
+            const width = this.clientWidth;
+            const touchPercentage = (touchPosition / width);
+            
+            updateProgressPosition(touchPercentage);
+        });
+
+        // Handle drag functionality for slider
+        let isDragging = false;
+
+        progressSlider.addEventListener('mousedown', function() {
+            isDragging = true;
+        });
+        
+        progressSlider.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            isDragging = true;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                const rect = progressContainer.getBoundingClientRect();
+                const position = e.clientX - rect.left;
+                const width = progressContainer.clientWidth;
+                let percentage = position / width;
+
+                // Constrain percentage between 0 and 1
+                percentage = Math.max(0, Math.min(1, percentage));
+
+                updateProgressPosition(percentage);
+            }
+        });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (isDragging) {
+                e.preventDefault();
+                const rect = progressContainer.getBoundingClientRect();
+                const position = e.touches[0].clientX - rect.left;
+                const width = progressContainer.clientWidth;
+                let percentage = position / width;
+
+                // Constrain percentage between 0 and 1
+                percentage = Math.max(0, Math.min(1, percentage));
+
+                updateProgressPosition(percentage);
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+        
+        document.addEventListener('touchend', function() {
+            isDragging = false;
+        });
+
+        function updateProgressPosition(percentage) {
+            // Update progress bar visually
+            progressBar.style.width = (percentage * 100) + '%';
+            progressSlider.style.left = (percentage * 100) + '%';
+
+            // Calculate and update time display (assuming 3:11 total length = 191 seconds)
+            const totalSeconds = 191; // 3:11 in seconds
+            const newCurrentSeconds = Math.floor(percentage * totalSeconds);
+            const minutes = Math.floor(newCurrentSeconds / 60);
+            const seconds = newCurrentSeconds % 60;
+
+            currentTimeDisplay.textContent = minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
+
+            // Set audio current time
+            if (audio.readyState >= 2) { // Make sure audio is loaded
+                audio.currentTime = newCurrentSeconds;
+            }
+        }
+
+        // Update progress bar as audio plays
+        audio.addEventListener('timeupdate', function() {
+            const percentage = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = percentage + '%';
+            progressSlider.style.left = percentage + '%';
+
+            const minutes = Math.floor(audio.currentTime / 60);
+            const seconds = Math.floor(audio.currentTime % 60);
+            currentTimeDisplay.textContent = minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
+        });
+        
+        // Crypto button click handlers (to copy addresses)
+        document.getElementById('btc-button').addEventListener('click', function() {
+            copyToClipboard('bc1ql6u4k6x4nmtuz6hlvs2j7haa7quz3ak7xgp4j8');
+            alert('BTC address copied to clipboard');
+        });
+        
+        document.getElementById('ltc-button').addEventListener('click', function() {
+            copyToClipboard('LVpm42bcGtUpijJYANkhmQrqohjC7t8yMW');
+            alert('LTC address copied to clipboard');
+        });
+        
+        // Social media icon click handlers
+        document.querySelectorAll('.social-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const platform = this.getAttribute('title');
+                let url = '#';
+                
+                // Define URLs for each platform
+                switch(platform) {
+                    case 'Spotify':
+                        url = 'https://open.spotify.com/user/31tdatblojk2gwzsjufjowoqcism';
+                        break;
+                    case 'GitHub':
+                        url = 'https://github.com/YoungSlaves';
+                        break;
+                    case 'Instagram':
+                        url = 'https://instagram.com/maskedsifu';
+                        break;
+                    case 'YouTube':
+                        url = 'https://youtube.com/@20gbp';
+                        break;
+                    case 'Discord':
+                        url = 'https://discord.com/users/1341549993378447421';
+                        break;
+                }
+                
+                window.open(url, '_blank');
+            });
+        });
+        
+        // Helper functions
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                // For modern browsers
+                navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';  // Prevent scrolling to bottom
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+        }
+        
+        // Server-side view tracking using Netlify Function
+        function trackPageView() {
+            // Use the fetch API to call our Netlify Function
+            fetch('/api/track-view', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update the view counter with the count returned from our function
+                if (data && data.viewCount !== undefined) {
+                    document.getElementById('view-counter').textContent = data.viewCount;
+                }
+            })
+            .catch(error => {
+                console.error('Error tracking view:', error);
+            });
+        }
+    </script>
+</body>
+</html>

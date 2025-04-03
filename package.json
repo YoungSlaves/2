@@ -1,0 +1,12 @@
+{
+  "name": "saponify-site",
+  "version": "1.0.0",
+  "description": "Personal profile site",
+  "main": "index.js",
+  "dependencies": {
+    "faunadb": "^4.7.0"
+  },
+  "scripts": {
+    "dev": "netlify dev"
+  }
+}
